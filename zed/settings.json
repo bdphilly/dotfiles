@@ -1,0 +1,63 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette
+{
+  "assistant": {
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "version": "2"
+  },
+  "features": {
+    "inline_completion_provider": "supermaven"
+  },
+  "vim_mode": true,
+  "relative_line_numbers": true,
+  "ui_font_size": 16,
+  "buffer_font_size": 16,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "Catppuccin Mocha"
+  },
+  // "languages": {
+  //   "JavaScript": {
+  //     "code_actions_on_format": {
+  //       "source.fixAll.eslint": true
+  //     }
+  //   },
+  //   "TypeScript": {
+  //     "code_actions_on_format": {
+  //       "source.fixAll.eslint": true
+  //     }
+  //   }
+  // },
+  // "formatter": {
+  //   "external": {
+  //     "command": "eslint --fix",
+  //     "arguments": ["fmt", "--stdin", "{buffer_path}"]
+  //   }
+  // },
+  // "languages": {
+  //   "TypeScript": {
+  //     "language_servers": ["!typescript-language-server", "vtsls", "..."],
+  //     "prettier": {
+  //       "allowed": true
+  //     },
+  //     "code_actions_on_format": {
+  //       "source.fixAll.eslint": true,
+  //       "source.removeUnusedImports": true
+  //     }
+  //   }
+  // },
+  // "code_actions_on_format": {
+  //   "source.removeUnusedImports": true
+  // }
+  "format_on_save": "on"
+}
