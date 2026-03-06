@@ -191,6 +191,8 @@ local direction_keys = {
 -- Table mapping keypresses to actions
 config.keys = {
 	bind_super_key_to_vim("s"),
+	-- claude & codex don't like shift + enter with wezterm. this uses kitty keyboard protocol excape sequence
+	{ key = "Enter", mods = "SHIFT", action = wezterm.action.SendString("\x1b[13;2u") },
 	{
 		key = "\\",
 		mods = "CMD",
@@ -211,6 +213,12 @@ config.keys = {
 		mods = "CMD",
 		action = wezterm.action.ClearScrollback("ScrollbackAndViewport"),
 	},
+
+	-- scroll navigation
+	{ key = "u", mods = "CTRL", action = act.ScrollByPage(-0.5) },
+	{ key = "d", mods = "CTRL", action = act.ScrollByPage(0.5) },
+	{ key = "PageUp", action = act.ScrollByPage(-1) },
+	{ key = "PageDown", action = act.ScrollByPage(1) },
 	-- natural text cursor editing:
 	{ mods = "OPT", key = "LeftArrow", action = wezterm.action.SendKey({ mods = "ALT", key = "b" }) },
 	{ mods = "OPT", key = "RightArrow", action = wezterm.action.SendKey({ mods = "ALT", key = "f" }) },
@@ -228,6 +236,43 @@ config.keys = {
 		key = "F",
 		mods = "CMD",
 		action = wezterm.action.Search({ CaseSensitiveString = "" }),
+	},
+
+	-- use ijkl for arrows
+	{
+		key = "l",
+		mods = "CTRL",
+		action = wezterm.action.SendKey({ key = "RightArrow" }),
+	},
+
+	{
+		key = "j",
+		mods = "CTRL",
+		action = wezterm.action.SendKey({ key = "LeftArrow" }),
+	},
+	{
+		key = "i",
+		mods = "CTRL",
+		action = wezterm.action.SendKey({ key = "UpArrow" }),
+	},
+	{
+		key = "k",
+		mods = "CTRL",
+		action = wezterm.action.SendKey({ key = "DownArrow" }),
+	},
+
+	-- Activate Launcher Menu
+	{
+		key = "l",
+		mods = "CMD",
+		action = wezterm.action.ShowLauncher,
+	},
+
+	-- Activate copy mode
+	{
+		key = "c",
+		mods = "LEADER",
+		action = wezterm.action.ActivateCopyMode,
 	},
 
 	-- { key = "LeftArrow", mods = "OPT|SHIFT", action = wezterm.action.ActivateCopyMode },
@@ -289,18 +334,107 @@ config.keys = {
 		}),
 	},
 
-	-- CTRL+SHIFT+Space, followed by 'a' will put us in activate-pane
+	-- CTRL+SHIFT+Space, followed by 'w' will put us in activate-pane
 	-- mode until we press some other key or until 1 second (1000ms)
 	-- of time elapses
+	-- // note: old way, use w to move around
+	-- {
+	-- 	key = "w",
+	-- 	mods = "LEADER",
+	-- 	action = act.ActivateKeyTable({
+	-- 		name = "activate_pane",
+	-- 		timeout_milliseconds = 1000,
+	-- 	}),
+	-- },
+	-- CTRL+SHIFT+Space, followed by 'w' will put us in pane select, show alphabet to choose active
 	{
 		key = "w",
 		mods = "LEADER",
-		action = act.ActivateKeyTable({
-			name = "activate_pane",
-			timeout_milliseconds = 1000,
+		action = wezterm.action.PaneSelect({
+			alphabet = "asdfghjkl;", -- home row keys, easy to reach
+			mode = "Activate",
 		}),
 	},
+	-- zoom active pane to fullscreen
+	{
+		key = "z",
+		mods = "LEADER",
+		action = wezterm.action.TogglePaneZoomState,
+	},
+	-- show that we are in zoomed state. (hard to tell otherwise there were other panes!)
+	{
+		key = "e",
+		mods = "LEADER",
+		action = act.PromptInputLine({
+			description = "Enter new tab name",
+			action = wezterm.action_callback(function(window, pane, line)
+				if line then
+					window:active_tab():set_title(line)
+				end
+			end),
+		}),
+	},
+
+	-- quick select mode (auto highlight common patters, select with 1 letter)
+	{ key = "p", mods = "LEADER", action = act.QuickSelect },
+	-- URL opening under cursor
+	{ key = "o", mods = "LEADER", action = act.OpenLinkAtMouseCursor },
+
+	-- Switch to last active tab
+	{ key = "Tab", mods = "CTRL", action = act.ActivateLastTab },
+
+	-- move pane to new tab
+	{ key = "T", mods = "LEADER", action = act.PaneSelect({ mode = "MoveToNewTab" }) },
+
+	{
+		key = "n",
+		mods = "LEADER",
+		action = act.PromptInputLine({
+			description = "Enter workspace name",
+			action = wezterm.action_callback(function(window, pane, line)
+				if line then
+					window:perform_action(act.SwitchToWorkspace({ name = line }), pane)
+				end
+			end),
+		}),
+	},
+	{ key = "W", mods = "LEADER", action = act.ShowLauncherArgs({ flags = "WORKSPACES" }) },
 }
+
+config.inactive_pane_hsb = {
+	saturation = 0.8,
+	brightness = 0.4,
+}
+
+wezterm.on("format-tab-title", function(tab)
+	local title = tab.active_pane.title
+
+	if tab.active_pane.is_zoomed then
+		return {
+			{ Background = { Color = "#ff5555" } },
+			{ Foreground = { Color = "#ffffff" } },
+			{ Text = " 🔍🔍🔍🔍  ZOOMED 🔍🔍🔍🔍🔍" .. title },
+		}
+	end
+end)
+
+local search_mode = wezterm.gui.default_key_tables().search_mode
+
+table.insert(search_mode, {
+	key = "n",
+	mods = "CTRL",
+	action = act.CopyMode("NextMatch"),
+})
+table.insert(search_mode, {
+	key = "p",
+	mods = "CTRL",
+	action = act.CopyMode("PriorMatch"),
+})
+table.insert(search_mode, {
+	key = "Enter",
+	mods = "SHIFT",
+	action = act.CopyMode("NextMatch"),
+})
 
 config.key_tables = {
 	-- Defines the keys that are active in our resize-pane mode.
@@ -342,7 +476,17 @@ config.key_tables = {
 		{ key = "DownArrow", action = act.ActivatePaneDirection("Down") },
 		{ key = "j", action = act.ActivatePaneDirection("Down") },
 	},
+
+	-- copy_mode = {
+	-- 	{ key = "e", mods = "SHIFT", action = act.CopyMode("MoveToEndOfLineContent") },
+	-- },
+	--
+
+	search_mode = search_mode,
 }
 
--- and finally, return the configuration to wezterm
+-- local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+--
+-- tabline.setup()
+
 return config
